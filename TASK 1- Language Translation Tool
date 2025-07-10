@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Language Translation Tool</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;margin:0;padding:20px}
+    .container{max-width:640px;margin:auto;background:#fff;padding:20px;border-radius:10px;
+               box-shadow:0 0 10px rgba(0,0,0,.1)}
+    textarea,select,button{width:100%;padding:10px;margin:10px 0}
+    .output{background:#f0f0f0;min-height:60px;padding:10px;border-radius:6px;white-space:pre-wrap}
+    .error{color:#d00;font-size:.9rem;margin-top:4px}
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🌐 Language Translation Tool</h2>
+
+  <label>Enter Text:</label>
+  <textarea id="inputText" rows="4" placeholder="Type your text here…"></textarea>
+
+  <label>From:</label>
+  <select id="sourceLang">
+    <option value="auto">Auto‑detect</option>
+    <option value="en">English</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="hi">Hindi</option>
+    <option value="de">German</option>
+  </select>
+
+  <label>To:</label>
+  <select id="targetLang">
+    <option value="hi">Hindi</option>
+    <option value="en">English</option>
+    <option value="fr">French</option>
+    <option value="es">Spanish</option>
+    <option value="de">German</option>
+  </select>
+
+  <button onclick="translateText()">Translate</button>
+
+  <div class="output" id="translatedText">Translated text will appear here…</div>
+  <div class="error" id="errorMsg"></div>
+
+  <button onclick="copyText()">📋 Copy Translated Text</button>
+  <button onclick="speakText()">🔊 Speak</button>
+</div>
+
+<script>
+async function translateText(){
+  document.getElementById('errorMsg').textContent = '';
+  const q      = document.getElementById('inputText').value.trim();
+  const source = document.getElementById('sourceLang').value;
+  const target = document.getElementById('targetLang').value;
+  if(!q){return alert('Please enter some text!');}
+
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(q)}`;
+
+  try{
+    const res  = await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();           // Google returns nested arrays
+    const translated = data[0].map(chunk => chunk[0]).join('');
+    document.getElementById('translatedText').textContent = translated;
+  }catch(err){
+    document.getElementById('errorMsg').textContent =
+      'Translation failed: ' + err.message;
+  }
+}
+
+function copyText(){
+  const text = document.getElementById('translatedText').textContent;
+  if(!text){return alert('Nothing to copy!')}
+  navigator.clipboard.writeText(text).then(()=>alert('Copied!'));
+}
+
+function speakText(){
+  const text = document.getElementById('translatedText').textContent;
+  if(!text){return;}
+  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+}
+</script>
+
+</body>
+</html>
